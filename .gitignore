@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest and coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local data and output files generated during training
+outputs/
+*.json
+*.csv
+
+# OS generated files
+.DS_Store
+Thumbs.db

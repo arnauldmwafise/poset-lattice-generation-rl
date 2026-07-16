@@ -1,0 +1,50 @@
+digraph Hash_4519014007132163677 {
+    # Layout directives for topological poset visualization
+    rankdir=BT;  # Forces bottom-to-top orientation
+    node [shape=circle, style=filled, fillcolor="#3182CE", fontcolor=white, fontname="Helvetica-Bold"];
+    edge [color="#4A5568", arrowhead=normal, arrowsize=0.8];
+
+    0;
+    1;
+    2;
+    3;
+    4;
+    5;
+    6;
+    7;
+    8;
+    9;
+    10;
+    11;
+    12;
+    13;
+    14;
+    15;
+    16;
+    17;
+    18;
+    19;
+
+    # Poset structural covering relations
+    0 -> 6;
+    1 -> 3;
+    2 -> 15;
+    3 -> 9;
+    4 -> 19;
+    5 -> 13;
+    7 -> 4;
+    7 -> 18;
+    8 -> 15;
+    9 -> 8;
+    9 -> 14;
+    10 -> 12;
+    11 -> 10;
+    12 -> 1;
+    13 -> 17;
+    14 -> 2;
+    15 -> 0;
+    16 -> 7;
+    17 -> 11;
+    18 -> 13;
+    19 -> 5;
+}
