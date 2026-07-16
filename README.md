@@ -1,4 +1,4 @@
-# Reinforcement Learning over Bounded Algebraic Structures via General PPO Schema
+# Reinforcement Learning over Partially Ordered Lattice Structures via General PPO Framework
 
 This software implements a non-sequential, random-ordered pair sampling policy framework to explore combinatorial DAG architectures optimized toward specific order-theoretic targets (Join/Meet Semilattices, Lattices, and Boolean Algebras).
 
