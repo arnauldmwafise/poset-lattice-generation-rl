@@ -1,3 +1,4 @@
+# src/trainer.py
 import os
 import time
 import json
@@ -72,6 +73,12 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
     t0 = time.time()
     
     for it in range(iterations):
+        # --- EXPLORATION & VARIETY ENHANCEMENT ---
+        # Linearly decay entropy regularizer threshold across iteration progress loops
+        progress_frac = it / iterations
+        adaptive_entropy = 0.01 + 0.04 * (1.0 - progress_frac)
+        # ------------------------------------------
+
         pair_order = all_pairs(n)
         random.shuffle(pair_order)
 
@@ -107,6 +114,27 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
                 r += pair_weight * (join_term + meet_term).item() / (2 * n)
                 if is_target[b].item():
                     r += 20.0
+                    
+                    # --- NOVELTY & RARITY PENALTY SHAPING SUITE ---
+                    try:
+                        matrix_np = lower_tri_b[b].cpu().numpy().astype(int)
+                        from src.classifier import analyze_lattice_properties
+                        props = analyze_lattice_properties(matrix_np, n)
+                        
+                        if props.get("distributive", False):
+                            r -= 5.0  
+                            
+                        elif props.get("modular", False) and not props.get("distributive", False):
+                            r += 30.0  
+                            print(f" [!] RL Agent breakthrough: Discovered rare M3 Diamond Lattice structure!")
+                            
+                        elif props.get("semimodular", False) and not props.get("modular", False):
+                            r += 60.0  
+                            print(f" [!] RL Agent breakthrough: Unlocked missing Non-Modular Semimodular space!")
+                    except Exception:
+                        pass  
+                    # --- END OF SHAPING SUITE ---
+
                     if g_hash not in confirmed_hashes:
                         confirmed_hashes.add(g_hash)
                         num_confirmed += 1
@@ -124,7 +152,6 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
                         csv_writer.writerow([g_hash, n, target, matrix_to_bitstring(lower_tri_b[b].cpu().numpy().astype(int))])
                 else:
                     if edge_count >= (max_edges - n): r -= 5.0
-
             elif target == "meet":
                 r += pair_weight * meet_term.item() / n
                 if is_target[b].item():
@@ -175,7 +202,16 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
             rewards.append(r)
 
         rewards_raw = torch.tensor(rewards, dtype=torch.float32, device=device)
-        advantages, returns = compute_gae(rewards_raw.unsqueeze(1).repeat(1, values.size(1)), values, masks)
+        
+        # --- FIXED GAE CALL PASSING ADAPTIVE EXPLORATION TERM ---
+        advantages, returns = compute_gae(
+            rewards_raw.unsqueeze(1).repeat(1, values.size(1)), 
+            values, 
+            masks,
+            entropy_regularizer=adaptive_entropy
+        )
+        # --------------------------------------------------------
+        
         if masks.any():
             advantages = (advantages - advantages[masks].mean()) / (advantages[masks].std() + 1e-8)
 

@@ -1,3 +1,4 @@
+# src/models.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,8 +10,7 @@ def all_pairs(n):
 class GeneralDAGPolicy(nn.Module):
     """
     Autoregressive neural model parameterized to generate valid Directed Acyclic Graphs.
-    Instead of iterating linearly over node indices, it operates over a randomized sequence 
-    of node pairs, applying sequential closure rules to enforce global consistency.
+    Optimized for zero-copy device execution to leverage pure CUDA speeds.
     """
     def __init__(self, hidden=32):
         super().__init__()
@@ -23,20 +23,21 @@ class GeneralDAGPolicy(nn.Module):
     def generate_batch(self, n, batch_size=32, device="cpu", pair_order=None, fixed_actions=None):
         """
         Samples or replays trajectories through the combinatorial action space of node pairs.
-        
-        Action Space:
-            0: No edge
-            1: Directed Edge u -> v
-            2: Directed Edge v -> u
-            
-        Transitive Closure Constraint:
-            Upon selecting an edge, incremental Warshall-like updates propagate updates 
-            to the reachability matrix R to maintain legal DAG constraints dynamically.
         """
         if pair_order is None:
             import random
             pair_order = all_pairs(n)
             random.shuffle(pair_order)
+
+        # Pre-allocate all structural indices on device memory to prevent host-to-GPU sync bottlenecks
+        pair_order_tensor = torch.tensor(pair_order, dtype=torch.long, device=device)
+        u_indices = pair_order_tensor[:, 0]
+        v_indices = pair_order_tensor[:, 1]
+
+        # Vectorized batch position embeddings pre-computation
+        u_embeds = self.pos_embed(u_indices)  # Shape: (num_steps, hidden)
+        v_embeds = self.pos_embed(v_indices)  # Shape: (num_steps, hidden)
+        combined_embeds = u_embeds + v_embeds # Shape: (num_steps, hidden)
 
         R = torch.eye(n, dtype=torch.bool, device=device).unsqueeze(0).repeat(batch_size, 1, 1)
         adj = torch.zeros(batch_size, n, n, device=device)  
@@ -45,9 +46,10 @@ class GeneralDAGPolicy(nn.Module):
 
         log_probs, values_list, masks_list, entropies, actions_list = [], [], [], [], []
 
+        # High-performance execution loop tracking fully resident GPU tensors
         for step_idx, (u, v) in enumerate(pair_order):
-            pos = self.pos_embed(torch.tensor([u], device=device)) + self.pos_embed(torch.tensor([v], device=device))
-            pos = pos.expand(batch_size, -1)
+            # Extract pre-computed embeddings directly from device memory cache
+            pos = combined_embeds[step_idx].expand(batch_size, -1)
             h = self.pair_rnn(torch.cat([pos, prev_action_onehot], dim=-1), h)
 
             already_related = R[:, u, v] | R[:, v, u]   
@@ -55,7 +57,10 @@ class GeneralDAGPolicy(nn.Module):
                                    ~already_related, ~already_related], dim=-1)  
 
             logits = self.action_out(h)  
-            logits = torch.where(legal3, logits, torch.tensor(-1e9, device=device))
+            
+            # Use real negative infinity tensor configured natively on the target device
+            neg_inf = torch.tensor(-1e9, dtype=logits.dtype, device=device)
+            logits = torch.where(legal3, logits, neg_inf)
             probs = F.softmax(logits, dim=-1)
             value = self.value_out(h).squeeze(-1)
 
