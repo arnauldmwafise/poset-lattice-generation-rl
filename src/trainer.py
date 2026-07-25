@@ -42,6 +42,12 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
     os.makedirs(output_dir, exist_ok=True)
     history_path = os.path.join(output_dir, f"history_n{n}_{target}_v5.json")
 
+    # Tracking sets for discrete semilattice records
+    seen_join_semi_hashes = set()
+    seen_meet_semi_hashes = set()
+    num_join_semi_confirmed = 0
+    num_meet_semi_confirmed = 0
+
     if target == "dual":
         confirmed_join_hashes, confirmed_meet_hashes = set(), set()
         num_confirmed_join, num_confirmed_meet = 0, 0
@@ -56,6 +62,14 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
         csv_file = open(os.path.join(output_dir, f"outputs_n{n}_{target}_v5.csv"), "w", newline="")
         csv_writer = csv.writer(csv_file)
         csv_writer.writerow(["hash", "n", "target", "matrix_bits"])
+        
+        # New streaming containers for isolated semi-lattices
+        join_semi_file = open(os.path.join(output_dir, f"outputs_n{n}_join_semilattice_v5.csv"), "w", newline="")
+        meet_semi_file = open(os.path.join(output_dir, f"outputs_n{n}_meet_semilattice_v5.csv"), "w", newline="")
+        join_semi_writer = csv.writer(join_semi_file)
+        meet_semi_writer = csv.writer(meet_semi_file)
+        join_semi_writer.writerow(["hash", "n", "target", "matrix_bits"])
+        meet_semi_writer.writerow(["hash", "n", "target", "matrix_bits"])
 
     pair_fail_join = torch.ones(n, n, device=device)
     pair_fail_meet = torch.ones(n, n, device=device)
@@ -66,18 +80,16 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
                    "avg_reward": [], "confirmed_join_total": [], "confirmed_meet_total": [], "gap1_fail": []}
     else:
         history = {"iter": [], "confirmed_in_batch": [], "join_frac": [], "meet_frac": [],
-                   "avg_reward": [], "confirmed_total": [], "gap1_fail": []}
+                   "avg_reward": [], "confirmed_total": [], "gap1_fail": [],
+                   "join_semilattices_in_batch": [], "meet_semilattices_in_batch": []}
 
     iterations = total_episodes // batch_size
     logging.info(f"Total optimization loops calculated: {iterations} iterations.")
     t0 = time.time()
     
     for it in range(iterations):
-        # --- EXPLORATION & VARIETY ENHANCEMENT ---
-        # Linearly decay entropy regularizer threshold across iteration progress loops
         progress_frac = it / iterations
         adaptive_entropy = 0.01 + 0.04 * (1.0 - progress_frac)
-        # ------------------------------------------
 
         pair_order = all_pairs(n)
         random.shuffle(pair_order)
@@ -96,6 +108,10 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
         pair_fail_join = ema_decay * pair_fail_join + (1 - ema_decay) * (1.0 - join_ok.float().mean(dim=0))
         pair_fail_meet = ema_decay * pair_fail_meet + (1 - ema_decay) * (1.0 - meet_ok.float().mean(dim=0))
 
+        # Vector validation shortcuts
+        is_join_semi_b = (join_ok.float().mean(dim=(1, 2)) >= 1.0)
+        is_meet_semi_b = (meet_ok.float().mean(dim=(1, 2)) >= 1.0)
+
         rewards = []
         for b in range(batch_size):
             adj_np = adj_b[b].cpu().numpy().astype(int)
@@ -107,38 +123,39 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
             jb, mb = join_ok[b], meet_ok[b]
             join_term = torch.where(jb, pair_fail_join, -pair_fail_join)[pmask].sum()
             meet_term = torch.where(mb, pair_fail_meet, -pair_fail_meet)[pmask].sum()
-
             max_edges = (n * (n - 1)) // 2
+
+            # Stream unique semi-lattices out to independent logs safely
+            matrix_bits_str = matrix_to_bitstring(lower_tri_b[b].cpu().numpy().astype(int))
+            if target != "dual":
+                if is_join_semi_b[b].item() and g_hash not in seen_join_semi_hashes:
+                    seen_join_semi_hashes.add(g_hash)
+                    join_semi_writer.writerow([g_hash, n, "join_semilattice", matrix_bits_str])
+                if is_meet_semi_b[b].item() and g_hash not in seen_meet_semi_hashes:
+                    seen_meet_semi_hashes.add(g_hash)
+                    meet_semi_writer.writerow([g_hash, n, "meet_semilattice", matrix_bits_str])
 
             if target == "lattice":
                 r += pair_weight * (join_term + meet_term).item() / (2 * n)
                 if is_target[b].item():
                     r += 20.0
-                    
-                    # --- NOVELTY & RARITY PENALTY SHAPING SUITE ---
                     try:
                         matrix_np = lower_tri_b[b].cpu().numpy().astype(int)
                         from src.classifier import analyze_lattice_properties
                         props = analyze_lattice_properties(matrix_np, n)
-                        
-                        if props.get("distributive", False):
-                            r -= 5.0  
-                            
+                        if props.get("distributive", False): r -= 5.0  
                         elif props.get("modular", False) and not props.get("distributive", False):
                             r += 30.0  
                             print(f" [!] RL Agent breakthrough: Discovered rare M3 Diamond Lattice structure!")
-                            
                         elif props.get("semimodular", False) and not props.get("modular", False):
                             r += 60.0  
                             print(f" [!] RL Agent breakthrough: Unlocked missing Non-Modular Semimodular space!")
-                    except Exception:
-                        pass  
-                    # --- END OF SHAPING SUITE ---
+                    except Exception: pass  
 
                     if g_hash not in confirmed_hashes:
                         confirmed_hashes.add(g_hash)
                         num_confirmed += 1
-                        csv_writer.writerow([g_hash, n, target, matrix_to_bitstring(lower_tri_b[b].cpu().numpy().astype(int))])
+                        csv_writer.writerow([g_hash, n, target, matrix_bits_str])
                 else:
                     if edge_count >= (max_edges - n): r -= 5.0
 
@@ -149,7 +166,7 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
                     if g_hash not in confirmed_hashes:
                         confirmed_hashes.add(g_hash)
                         num_confirmed += 1
-                        csv_writer.writerow([g_hash, n, target, matrix_to_bitstring(lower_tri_b[b].cpu().numpy().astype(int))])
+                        csv_writer.writerow([g_hash, n, target, matrix_bits_str])
                 else:
                     if edge_count >= (max_edges - n): r -= 5.0
             elif target == "meet":
@@ -202,15 +219,12 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
             rewards.append(r)
 
         rewards_raw = torch.tensor(rewards, dtype=torch.float32, device=device)
-        
-        # --- FIXED GAE CALL PASSING ADAPTIVE EXPLORATION TERM ---
         advantages, returns = compute_gae(
             rewards_raw.unsqueeze(1).repeat(1, values.size(1)), 
             values, 
             masks,
             entropy_regularizer=adaptive_entropy
         )
-        # --------------------------------------------------------
         
         if masks.any():
             advantages = (advantages - advantages[masks].mean()) / (advantages[masks].std() + 1e-8)
@@ -250,11 +264,17 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
                       f"gap1_fail={gap1:.3f} | elapsed={time.time()-t0:.1f}s")
         else:
             num_target = is_target.sum().item()
+            num_join_semi = is_join_semi_b.sum().item()
+            num_meet_semi = is_meet_semi_b.sum().item()
+            
             history["confirmed_in_batch"].append(num_target)
             history["confirmed_total"].append(num_confirmed)
+            history["join_semilattices_in_batch"].append(num_join_semi)
+            history["meet_semilattices_in_batch"].append(num_meet_semi)
+            
             if (it + 1) % 20 == 0 or it == 0:
                 print(f"it {it+1:3d}/{iterations} | [{target}] found={num_target:2d}/{batch_size} | "
-                      f"join={join_frac.mean().item():.3f} meet={meet_frac.mean().item():.3f} | "
+                      f"join_semi={num_join_semi:2d}/{batch_size} meet_semi={num_meet_semi:2d}/{batch_size} | "
                       f"reward={np.mean(rewards):.2f} | confirmed={num_confirmed} | "
                       f"gap1_fail={gap1:.3f} | elapsed={time.time()-t0:.1f}s")
 
@@ -265,6 +285,8 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
                 meet_csv_file.flush()
             else:
                 csv_file.flush()
+                join_semi_file.flush()
+                meet_semi_file.flush()
 
     json.dump(history, open(history_path, "w"))
     if target == "dual":
@@ -272,6 +294,8 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
         meet_csv_file.close()
     else:
         csv_file.close()
+        join_semi_file.close()
+        meet_semi_file.close()
         
     logging.info(f"Completed optimization sequence successfully in {time.time()-t0:.2f}s")
     return policy, history

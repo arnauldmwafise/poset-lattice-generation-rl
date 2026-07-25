@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 
+
 def _extremal_counts(bound_source: torch.Tensor, path_source: torch.Tensor) -> torch.Tensor:
     """
     Evaluates reachability predicates over elements to compute unique bounds.
