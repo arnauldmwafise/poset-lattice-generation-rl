@@ -9,7 +9,6 @@ __pycache__/
 htmlcov/
 
 # Local data and output files generated during training
-outputs/
 *.json
 *.csv
 
