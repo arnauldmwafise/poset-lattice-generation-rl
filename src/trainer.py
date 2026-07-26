@@ -158,7 +158,6 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
                         csv_writer.writerow([g_hash, n, target, matrix_bits_str])
                 else:
                     if edge_count >= (max_edges - n): r -= 5.0
-
             elif target == "join":
                 r += pair_weight * join_term.item() / n
                 if is_target[b].item():
@@ -272,8 +271,13 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
             history["join_semilattices_in_batch"].append(num_join_semi)
             history["meet_semilattices_in_batch"].append(num_meet_semi)
             
+            # --- CLEAN VISUAL UPDATE: TARGET-AWARE CONSOLE PRINTING ---
+            display_label = target
+            if target == "join": display_label = "join_semilattice"
+            if target == "meet": display_label = "meet_semilattice"
+            
             if (it + 1) % 20 == 0 or it == 0:
-                print(f"it {it+1:3d}/{iterations} | [{target}] found={num_target:2d}/{batch_size} | "
+                print(f"it {it+1:3d}/{iterations} | [{display_label}] found={num_target:2d}/{batch_size} | "
                       f"join_semi={num_join_semi:2d}/{batch_size} meet_semi={num_meet_semi:2d}/{batch_size} | "
                       f"reward={np.mean(rewards):.2f} | confirmed={num_confirmed} | "
                       f"gap1_fail={gap1:.3f} | elapsed={time.time()-t0:.1f}s")
@@ -299,3 +303,4 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
         
     logging.info(f"Completed optimization sequence successfully in {time.time()-t0:.2f}s")
     return policy, history
+
