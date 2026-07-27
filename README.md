@@ -1,6 +1,25 @@
 # Reinforcement Learning for Finite Lattice Generation via Proximal Policy Optimization
 
-This software implements a non-sequential, random-ordered pair sampling policy framework to explore combinatorial Directed Acyclic Graph(DAG) architectures optimized toward specific order-theoretic targets (Join/Meet Semilattices, Lattices, and Boolean Algebras).
+This software implements a non-sequential, random-ordered pair sampling policy framework to explore combinatorial Directed Acyclic Graph (DAG) architectures optimized toward specific order-theoretic targets (Join/Meet Semilattices, Lattices, and Boolean Algebras).
+
+## Citation
+
+If you use this software, datasets, or methodology in your research, please cite the following preprint:
+
+### BibTeX
+```bibtex
+@article{mwafise2026order,
+  author    = {Mwafise Mesinga, Arnauld},
+  title     = {Order-Agnostic Generation of Lattices via Reinforcement Learning},
+  journal   = {ScienceOpen Preprints},
+  year      = {2026},
+  doi       = {10.14293/PR2199.004125.v1},
+  url       = {https://github.com}
+}
+```
+
+### APA Style
+Mwafise, A. M. (2026). Order-Agnostic Generation of Lattices via Reinforcement Learning. *ScienceOpen Preprints*. https://doi.org
 
 ## Mathematical Formulation
 
