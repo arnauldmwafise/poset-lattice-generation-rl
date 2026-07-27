@@ -9,7 +9,7 @@ If you use this software, datasets, or methodology in your research, please cite
 ### BibTeX
 ```bibtex
 @article{mwafise2026order,
-  author    = {Mwafise Mesinga, Arnauld},
+  author    = {Mesinga Mwafise, Arnauld},
   title     = {Order-Agnostic Generation of Lattices via Reinforcement Learning},
   journal   = {ScienceOpen Preprints},
   year      = {2026},
