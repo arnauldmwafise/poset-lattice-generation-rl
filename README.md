@@ -19,7 +19,7 @@ If you use this software, datasets, or methodology in your research, please cite
 ```
 
 ### APA Style
-Mwafise, A. M. (2026). Order-Agnostic Generation of Lattices via Reinforcement Learning. *ScienceOpen Preprints*. https://doi.org
+Mwafise, A. M. (2026). Order-Agnostic Generation of Lattices via Reinforcement Learning. *ScienceOpen Preprints*. https://doi.org/10.14293/pr2199.004125.v1
 
 ## Mathematical Formulation
 
