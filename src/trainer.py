@@ -109,8 +109,13 @@ def train_and_log(n=20, total_episodes=4500, batch_size=32, ppo_epochs=4, lr=2e-
         pair_fail_meet = ema_decay * pair_fail_meet + (1 - ema_decay) * (1.0 - meet_ok.float().mean(dim=0))
 
         # Vector validation shortcuts
-        is_join_semi_b = (join_ok.float().mean(dim=(1, 2)) >= 1.0)
-        is_meet_semi_b = (meet_ok.float().mean(dim=(1, 2)) >= 1.0)
+        # NOTE: averaged only over the n*(n-1) off-diagonal pairs via pmask,
+        # matching join_frac/meet_frac in diagnostics.py. An earlier version
+        # averaged over all n*n cells including the diagonal (which is always
+        # 0 in join_ok/meet_ok), so the >=1.0 threshold could never be met;
+        # this line fixes that.
+        is_join_semi_b = (join_ok.float()[:, pmask].mean(dim=1) >= 1.0)
+        is_meet_semi_b = (meet_ok.float()[:, pmask].mean(dim=1) >= 1.0)
 
         rewards = []
         for b in range(batch_size):
