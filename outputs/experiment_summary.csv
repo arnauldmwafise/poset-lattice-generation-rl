@@ -1,7 +1,4 @@
 n,target,total_episodes,batch_size,elapsed_sec,output_dir,confirmed_total,distributive,modular_non_distributive,semimodular_non_modular,general_lattice,status,experiment
-30,lattice,4800,32,1104.56,./outputs/exp1,2425,875.0,15.0,0.0,1535.0,ok,1
-30,join,2400,16,916.23,./outputs/exp1,1827,,,,,ok,1
-30,meet,2400,16,913.64,./outputs/exp1,1511,,,,,ok,1
-30,lattice,4800,32,1063.72,./outputs/exp2,1843,436.0,11.0,1.0,1395.0,ok,2
-30,join,2400,16,936.35,./outputs/exp2,1376,,,,,ok,2
-30,meet,2400,16,912.92,./outputs/exp2,1249,,,,,ok,2
+40,lattice,4800,16,3417.53,./outputs/exp1,1420,199.0,8.0,0.0,1213.0,ok,1
+40,join,2400,16,1601.64,./outputs/exp1,1744,,,,,ok,1
+40,meet,2400,16,1673.45,./outputs/exp1,1263,,,,,ok,1
