@@ -1,4 +1,4 @@
 n,target,total_episodes,batch_size,elapsed_sec,output_dir,confirmed_total,distributive,modular_non_distributive,semimodular_non_modular,general_lattice,status,experiment
-50,lattice,4800,16,5975.37,./outputs/exp1,3274,2379.0,4.0,0.0,891.0,ok,1
-50,join,2400,16,1807.62,./outputs/exp1,1007,,,,,ok,1
-50,meet,2400,16,147.89,./outputs/exp1,65,,,,,ok,1
+40,lattice,4800,16,,./outputs/exp1,,,,,,failed: 6_64-lin�() method: bad call flags,1
+40,join,2400,16,706.34,./outputs/exp1,532.0,,,,,ok,1
+40,meet,2400,16,1.35,./outputs/exp1,1587.0,,,,,ok,1
