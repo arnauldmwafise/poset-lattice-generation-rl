@@ -1,2 +1,4 @@
 n,target,num_experiments,confirmed_mean,confirmed_std,elapsed_mean_sec,distributive_mean,modular_non_distributive_mean,semimodular_non_modular_mean,general_lattice_mean
-50,lattice,1,3387.0,,5183.16,2304.0,8.0,0.0,1075.0
+40,join,1,1811.0,,1969.69,,,,
+40,lattice,1,3485.0,,4427.67,2372.0,12.0,0.0,1101.0
+40,meet,1,1497.0,,1905.73,,,,
