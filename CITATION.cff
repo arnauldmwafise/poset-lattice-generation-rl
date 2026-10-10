@@ -1,13 +1,16 @@
 cff-version: 1.2.0
 message: "If you use this software or reference the underlying methodology, please cite the preprint below."
-authors:
-  - family-names: Mesinga Mwafise
-    given-names: Arnauld 
 title: "Order-Agnostic Generation of Lattices via Reinforcement Learning"
+type: software
 version: 1.0.0
-doi: 10.14293/PR2199.004125.v1
 date-released: 2026-07-27
-url: "https://github.com"
+doi: 10.14293/PR2199.004125.v2
+license: MIT
+repository-code: "https://github.com/arnauldmwafise/poset-lattice-generation-rl"
+url: "https://github.com/arnauldmwafise/poset-lattice-generation-rl"
+authors:
+  - family-names: Mwafise
+    given-names: Arnauld Mesinga
 keywords:
   - reinforcement-learning
   - lattice-theory
@@ -22,8 +25,9 @@ preferred-citation:
   type: article
   authors:
     - family-names: Mwafise
-    given-names: Arnauld Mesinga
+      given-names: Arnauld Mesinga
   title: "Order-Agnostic Generation of Lattices via Reinforcement Learning"
   journal: "ScienceOpen Preprints"
   year: 2026
-  doi: 10.14293/PR2199.004125.v1
+  doi: 10.14293/PR2199.004125.v2
+  url: "https://doi.org/10.14293/pr2199.004125.v2"
