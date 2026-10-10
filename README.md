@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-%E2%89%A53.10-blue.svg)](pyproject.toml)
-[![DOI](https://img.shields.io/badge/DOI-10.14293%2FPR2199.004125.v1-informational.svg)](https://doi.org/10.14293/pr2199.004125.v1)
+[![DOI](https://img.shields.io/badge/DOI-10.14293%2FPR2199.004125.v2-informational.svg)](https://doi.org/10.14293/pr2199.004125.v2)
 
 A reinforcement-learning framework for generating finite partially ordered sets (posets) that satisfy a prescribed order-theoretic closure property: **lattice**, **join-semilattice**, **meet-semilattice**, or **Boolean algebra**. A recurrent policy builds a candidate poset by deciding the relation between *pairs* of elements, visited in a freshly randomized order at every rollout. An exact, policy-independent verification oracle certifies each candidate, and the policy is trained with Proximal Policy Optimization (PPO).
 
