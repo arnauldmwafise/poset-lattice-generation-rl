@@ -37,7 +37,7 @@ Let $P = (X, \le)$ be a finite poset.
 - A lattice is **distributive** if $x \wedge (y \vee z) = (x \wedge y) \vee (x \wedge z)$ for all $x, y, z$, and **modular** if $x \le b \Rightarrow x \vee (a \wedge b) = (x \vee a) \wedge b$.
 - A lattice is **Boolean** if it is distributive and complemented.
 
-The number of non-isomorphic lattices on $n$ elements (OEIS A006966) grows super-exponentially (5,994 at $n = 10$), which confines exact, exhaustive enumeration to modest $n$. A uniformly random relation matrix satisfies the lattice axioms with vanishing probability as $n$ grows, so neither enumeration nor naive sampling reaches larger sizes. This repository studies whether a learned sampler can.
+The number of non-isomorphic lattices on $n$ elements (OEIS A006966) grows super-exponentially (5,994 at $n = 10$) to over 23 trillion at n=20, which confines exact, exhaustive enumeration to modest $n$. A uniformly random relation matrix satisfies the lattice axioms with vanishing probability as $n$ grows, so neither enumeration nor naive sampling reaches larger sizes. This repository studies whether a learned sampler can.
 
 **A design finding.** Generating the relation matrix with a fixed, sequential visitation order (the default in node-by-node generators such as GraphRNN) structurally starves early-visited elements of admissible relations: under a strict order, node $j$ can only have predecessors among $\{0,\dots,j-1\}$, regardless of policy quality. Visiting all $\binom{n}{2}$ pairs in a freshly randomized order each rollout removes this bias and is the central design choice of this work.
 
@@ -60,7 +60,7 @@ All quantities below are measured on the *batch lattice rate*: the fraction of s
 | 20 / 30 / 40 | join-semilattice | 16 | 150 | 60.2% / 62.5% / 68.0% | 81.3% / 87.5% / 87.5% | 1,302 / 1,350 / 1,512 | — |
 | 20 / 30 / 40 | meet-semilattice | 16 | 150 | 72.7% / 49.2% / 49.2% | 87.5% / 68.8% / 75.0% | 1,608 / 1,090 / 1,152 | — |
 
-Wall-clock times are for a single run on a Google Colab GPU (GPU model not recorded). For $n \ge 30$ lattice runs, training sustained mean rates of 61–81% and peak rates of 87.5–100% with no collapse, at problem sizes roughly double the exact-enumeration ceiling. The $n = 20$, $B = 16$ run showed a late-training decline that did not reproduce at $B = 32$ or $B = 64$.
+Wall-clock times are for a single run on a Google Colab GPU. For $n \ge 30$ lattice runs, training sustained mean rates of 61–81% and peak rates of 87.5–100% with no collapse, at problem sizes roughly double the exact-enumeration ceiling. The $n = 20$, $B = 16$ run showed a late-training decline that did not reproduce at $B = 32$ or $B = 64$.
 
 **Rare structure classes.** Under the property-aware reward, the policy repeatedly produced lattices that are modular but not distributive (necessarily containing an $M_3$ sublattice) and, once, a lattice that is upper semimodular but not modular (necessarily containing an $N_5$ sublattice). Bonus events in the $n = 20, 30, 40, 50$ lattice runs ($B=16$): 13, 15, 10, and 6 respectively. These count reward events, not distinct structures.
 
