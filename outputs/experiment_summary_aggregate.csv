@@ -1,2 +1,2 @@
 n,target,num_experiments,confirmed_mean,confirmed_std,elapsed_mean_sec,distributive_mean,modular_non_distributive_mean,semimodular_non_modular_mean,general_lattice_mean
-20,lattice,3,1295.33,326.86,605.89,453.0,8.0,0.0,834.33
+20,lattice,3,775.67,274.58,304.87,344.0,5.0,0.33,426.33
